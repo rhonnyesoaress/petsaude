@@ -47,7 +47,7 @@ Certifique-se de ter o **Python (versão 3.8 ou superior)** e o **Git** instalad
 
 1.  **Clone o Repositório:**
     ```bash
-    git clone https://github.com/rhonnyesoaress/petsaude/tree/main
+    git clone https://github.com/rhonnyesoaress/petsaude
     cd nome_do_seu_diretorio
     ```
 
