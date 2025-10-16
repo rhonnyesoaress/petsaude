@@ -9,11 +9,16 @@ Desenvolvido como parte das atividades do **PET Saúde/Interprofissionalidade - 
 O sistema foi desenhado para ser intuitivo e funcional, com foco na integridade e privacidade dos dados:
 
 * **👤 Cadastro Inteligente:** Registro com validação de CPF, cálculo automático de idade e classificação de faixa etária (Recém-Nascido, Criança, Adolescente/Jovem, Adulto, Idoso).
+* 
 * **📝 Agendamento:** Permite agendamentos futuros de consultas, com seleção de especialidade padronizada e registro de observações.
-* **💉 Cartão de Vacinação Dinâmico:** Visualização do status vacinal por faixa etária, com marcação de doses **[TOMADA]** através de cartões clicáveis, simulando um cartão de vacina real.
+* 
+* **💉 Cartão de Vacinação Dinâmico:** Visualização do status vacinal por faixa etária, com marcação de doses **[APLICADA]** através de caixas clicáveis, simulando um cartão de vacina.
+* 
 * **📊 Dashboard Gerencial (LGPD Compliant):** Indicadores agregados e anonimizados, como distribuição por faixa etária, origem dos pacientes (cidade) e demanda por especialidade, sem exposição de dados sensíveis.
+* 
 * **❓ FAQ Integrado:** Página de Dúvidas Frequentes para auto-serviço e referência rápida sobre as regras do sistema e calendário vacinal.
-* **✨ Interface Moderna:** Desenvolvido com Streamlit, utilizando o tema claro (branco/azul) para melhor usabilidade e experiência visual.
+* 
+* **✨ Interface Moderna:** Desenvolvido com Streamlit, utilizando o tema escuro (preto/azul) para melhor usabilidade e experiência visual.
 
 ## 🛡️ Conformidade e Privacidade (LGPD)
 
