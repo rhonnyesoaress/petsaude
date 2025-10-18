@@ -207,17 +207,26 @@ def tela_cadastro_consulta():
         st.warning("Nenhum paciente cadastrado. Cadastre um paciente primeiro.")
         return
         
-    # Cria uma lista de opções para o selectbox
-    pacientes_options = {p_cpf: f"{p['nome']} ({formatar_cpf(p_cpf)})" for p_cpf, p in pacientes_list.items()}
-    pacientes_display_names = ["Selecione um paciente..."] + list(pacientes_options.values())
+    # CRIAÇÃO DO MAPA NOME -> CPF (Para esconder o CPF no selectbox)
+    pacientes_options_map = {p['nome']: p_cpf for p_cpf, p in pacientes_list.items()}
+    pacientes_display_names = ["Selecione um paciente..."] + list(pacientes_options_map.keys())
 
-    selected_name = st.selectbox("Selecione o Paciente", pacientes_display_names)
+    # LÓGICA DE PRÉ-SELEÇÃO
+    cpf_para_preselecao = st.session_state.get('last_registered_cpf')
+    initial_index = 0
+    if cpf_para_preselecao and cpf_para_preselecao in pacientes_list:
+        nome_do_paciente = pacientes_list[cpf_para_preselecao]['nome']
+        initial_index = pacientes_display_names.index(nome_do_paciente)
+        # Não precisa deletar last_registered_cpf aqui, o tela_cadastro_paciente já cuida disso.
+
+    selected_name = st.selectbox("Selecione o Paciente", pacientes_display_names, index=initial_index)
     
     if selected_name != "Selecione um paciente...":
-        # Encontra o CPF correspondente ao nome selecionado
-        selected_cpf = [cpf for cpf, name in pacientes_options.items() if name == selected_name][0]
+        # RECUPERA O CPF ATRAVÉS DO NOME SELECIONADO
+        selected_cpf = pacientes_options_map[selected_name]
         
         with st.form("form_consulta"):
+            # min_value=date.today() impede agendamentos no passado
             data_consulta = st.date_input("Data da Consulta", min_value=date.today(), format='DD/MM/YYYY')
             especialidade = st.selectbox("Especialidade", options=ESPECIALIDADES)
             observacoes = st.text_area("Observações").strip()
@@ -236,6 +245,7 @@ def tela_cadastro_consulta():
                     st.session_state['consultas'][selected_cpf].append(nova_consulta)
                     st.success(f"Consulta registrada para **{st.session_state['pacientes'][selected_cpf]['nome']}**!")
 
+
 def tela_visualizar_historico():
     """Interface para visualizar histórico e vacinas."""
     st.header("📋 Histórico e Vacinação")
@@ -245,12 +255,22 @@ def tela_visualizar_historico():
         st.warning("Nenhum paciente cadastrado.")
         return
         
-    pacientes_options = {p_cpf: f"{p['nome']} ({formatar_cpf(p_cpf)})" for p_cpf, p in pacientes_list.items()}
-    pacientes_display_names = ["Selecione um paciente..."] + list(pacientes_options.values())
-    selected_name = st.selectbox("Selecione o Paciente", pacientes_display_names)
+    # CRIAÇÃO DO MAPA NOME -> CPF (Para esconder o CPF no selectbox)
+    pacientes_options_map = {p['nome']: p_cpf for p_cpf, p in pacientes_list.items()}
+    pacientes_display_names = ["Selecione um paciente..."] + list(pacientes_options_map.keys())
+    
+    # LÓGICA DE PRÉ-SELEÇÃO
+    cpf_para_preselecao = st.session_state.get('last_registered_cpf')
+    initial_index = 0
+    if cpf_para_preselecao and cpf_para_preselecao in pacientes_list:
+        nome_do_paciente = pacientes_list[cpf_para_preselecao]['nome']
+        initial_index = pacientes_display_names.index(nome_do_paciente)
+        
+    selected_name = st.selectbox("Selecione o Paciente", pacientes_display_names, index=initial_index)
 
     if selected_name != "Selecione um paciente...":
-        selected_cpf = [cpf for cpf, name in pacientes_options.items() if name == selected_name][0]
+        # RECUPERA O CPF ATRAVÉS DO NOME SELECIONADO
+        selected_cpf = pacientes_options_map[selected_name]
         paciente = st.session_state['pacientes'][selected_cpf]
 
         st.subheader(f"Dados de **{paciente['nome']}**")
@@ -258,215 +278,249 @@ def tela_visualizar_historico():
         
         st.markdown("---")
         
-        # --- Seção de Vacinas ---
-        st.subheader("💉 Status de Vacinação")
-        faixa = paciente['faixa_etaria']
-        vacinas_relevantes = VACINAS_POR_GRUPO.get(faixa, [])
-        vacinas_tomadas_set = set(paciente['vacinas_tomadas'])
+        # Criação das abas
+        tab_atendimentos, tab_vacinacao = st.tabs(["Atendimentos (Consultas)", "Cartão de Vacina"])
         
-        dados_vacinas = []
-        for vacina in vacinas_relevantes:
-            status = "✅ APLICADA" if vacina in vacinas_tomadas_set else "❌ PENDENTE"
-            dados_vacinas.append({"Vacina": vacina, "Status": status})
+        # Conteúdo da Aba 1: Atendimentos/Consultas
+        with tab_atendimentos:
+            st.subheader("📜 Histórico de Consultas")
+            historico = st.session_state['consultas'].get(selected_cpf, [])
 
-        if dados_vacinas:
-            df_vacinas = pd.DataFrame(dados_vacinas)
-            st.dataframe(df_vacinas, hide_index=True, width='stretch')
-        else:
-            st.write(f"Nenhuma vacina específica listada para a faixa '{faixa}'.")
+            if historico:
+                df_consultas = pd.DataFrame(historico)
+                df_consultas['data'] = pd.to_datetime(df_consultas['data']) 
+                df_consultas['data'] = df_consultas['data'].dt.strftime('%d/%m/%Y')
+                df_consultas = df_consultas.rename(columns={'data': 'Data', 'especialidade': 'Especialidade', 'observacoes': 'Observações'})
+                df_consultas = df_consultas.sort_values(by='Data', ascending=False)
+                
+                st.dataframe(df_consultas, hide_index=True, use_container_width=True)
+            else:
+                st.info("Nenhuma consulta/atendimento registrado para este paciente.")
 
-        st.markdown("---")
-        
-        # --- Seção de Histórico de Consultas ---
-        st.subheader("📜 Histórico de Consultas")
-        historico = st.session_state['consultas'].get(selected_cpf, [])
-
-        if historico:
-            # Converte para DataFrame para visualização em tabela
-            df_consultas = pd.DataFrame(historico)
-            df_consultas['data'] = pd.to_datetime(df_consultas['data'])
-            df_consultas['data'] = df_consultas['data'].dt.strftime('%d/%m/%Y')
-            df_consultas = df_consultas.rename(columns={'data': 'Data', 'especialidade': 'Especialidade', 'observacoes': 'Observações'})
-            # Ordena da mais recente para a mais antiga
-            df_consultas = df_consultas.sort_values(by='Data', ascending=False)
+        # Conteúdo da Aba 2: Cartão de Vacina
+        with tab_vacinacao:
+            st.subheader("💉 Status de Vacinação")
+            faixa = paciente['faixa_etaria']
+            vacinas_relevantes = VACINAS_POR_GRUPO.get(faixa, [])
+            vacinas_tomadas_set = set(paciente['vacinas_tomadas'])
             
-            st.dataframe(df_consultas, hide_index=True, width='stretch')
-        else:
-            st.info("Nenhuma consulta registrada para este paciente.")
+            dados_vacinas = []
+            for vacina in vacinas_relevantes:
+                status = "✅ APLICADA" if vacina in vacinas_tomadas_set else "❌ PENDENTE"
+                dados_vacinas.append({"Vacina": vacina, "Status": status})
+
+            if dados_vacinas:
+                df_vacinas = pd.DataFrame(dados_vacinas)
+                st.dataframe(df_vacinas, hide_index=True, use_container_width=True)
+            else:
+                st.write(f"Nenhuma vacina específica listada para a faixa '{faixa}'.")
+
 
 def tela_registrar_vacina():
     """Interface para registrar vacinas tomadas."""
     
-    # 1. REMOVE a verificação do topo (será movida para o placeholder)
-    # if 'vacina_success_message' in st.session_state:
-    #     st.success(st.session_state['vacina_success_message'])
-    #     del st.session_state['vacina_success_message']
-
+    # 1. VERIFICAÇÃO E EXIBIÇÃO DA MENSAGEM (Com placeholder no final)
     st.header("✅ Registrar Vacina Tomada")
     
     pacientes_list = st.session_state['pacientes']
     if not pacientes_list:
         st.warning("Nenhum paciente cadastrado.")
-        
-        # Cria um placeholder vazio no final, mesmo que não haja pacientes, para manter a estrutura
         placeholder_msg = st.empty() 
         return
     
-    # ... código de seleção de paciente (selectbox) ...
-    pacientes_options = {p_cpf: f"{p['nome']} ({formatar_cpf(p_cpf)})" for p_cpf, p in pacientes_list.items()}
-    pacientes_display_names = ["Selecione um paciente..."] + list(pacientes_options.values())
-    selected_name = st.selectbox("Selecione o Paciente", pacientes_display_names, key='select_pac_reg_vac')
+    # CRIAÇÃO DO MAPA NOME -> CPF (Para esconder o CPF no selectbox)
+    pacientes_options_map = {p['nome']: p_cpf for p_cpf, p in pacientes_list.items()}
+    pacientes_display_names = ["Selecione um paciente..."] + list(pacientes_options_map.keys())
 
-    if selected_name != "Selecione um paciente...":
-        selected_cpf = [cpf for cpf, name in pacientes_options.items() if name == selected_name][0]
-        paciente = st.session_state['pacientes'][selected_cpf]
+    # LÓGICA DE PRÉ-SELEÇÃO
+    cpf_para_preselecao = st.session_state.get('last_registered_cpf')
+    initial_index = 0
+    if cpf_para_preselecao and cpf_para_preselecao in pacientes_list:
+        nome_do_paciente = pacientes_list[cpf_para_preselecao]['nome']
+        initial_index = pacientes_display_names.index(nome_do_paciente)
         
-        faixa = paciente['faixa_etaria']
-        vacinas_relevantes = VACINAS_POR_GRUPO.get(faixa, [])
-        vacinas_tomadas_set = set(paciente['vacinas_tomadas'])
-        
-        pendentes_list = [v for v in vacinas_relevantes if v not in vacinas_tomadas_set]
+    # Seleção de Paciente
+    selected_name = st.selectbox(
+        "Selecione o Paciente", 
+        pacientes_display_names, 
+        index=initial_index, 
+        key='select_pac_reg_vac'
+    )
 
-        if not pendentes_list:
-            st.success(f"Todas as vacinas relevantes para '{faixa}' já estão registradas como tomadas para {paciente['nome']}.")
-            # Cria um placeholder vazio para manter a estrutura, mesmo que não seja usado.
-            placeholder_msg = st.empty() 
-            return
+    if selected_name == "Selecione um paciente...":
+        # Interrompe a execução se o valor padrão for selecionado
+        placeholder_msg = st.empty()
+        return
 
-        st.subheader(f"Vacinas Pendentes para **{paciente['nome']}** ({faixa})")
-        st.markdown("Marque as vacinas que foram **administradas**:")
-
-        vacinas_para_registrar = []
-        for vacina in pendentes_list:
-            if st.checkbox(vacina, key=f"vac_check_{vacina}"): 
-                vacinas_para_registrar.append(vacina)
-
-        # Botão de confirmação
-        print()
-        if st.button("Confirmar Registro de Vacinas"):
-            if vacinas_para_registrar:
-                for v in vacinas_para_registrar:
-                    st.session_state['pacientes'][selected_cpf]['vacinas_tomadas'].append(v)
-                
-                # Salva a mensagem no estado de sessão
-                print()
-                st.session_state['vacina_success_message'] = (
-                    f"✅ **{len(vacinas_para_registrar)}** vacina(s) registrada(s) com sucesso "
-                    f"para **{paciente['nome']}**!"
-                )
-                
-                # Força a recarga
-                st.rerun()
-            else:
-                st.warning("Selecione pelo menos uma vacina para registrar.")
-
+    # RECUPERA O CPF ATRAVÉS DO NOME SELECIONADO
+    selected_cpf = pacientes_options_map[selected_name]
+    paciente = st.session_state['pacientes'][selected_cpf]
     
+    # ... (restante da função para listar vacinas pendentes e checklist) ...
+    
+    faixa = paciente['faixa_etaria']
+    vacinas_relevantes = VACINAS_POR_GRUPO.get(faixa, [])
+    vacinas_tomadas_set = set(paciente['vacinas_tomadas'])
+    
+    pendentes_list = [v for v in vacinas_relevantes if v not in vacinas_tomadas_set]
+
+    if not pendentes_list:
+        st.success(f"Todas as vacinas relevantes para '{faixa}' já estão registradas como tomadas para {paciente['nome']}.")
+        placeholder_msg = st.empty() 
+        return
+
+    st.subheader(f"Vacinas Pendentes para **{paciente['nome']}** ({faixa})")
+    st.markdown("Marque as vacinas que foram **administradas**:")
+
+    vacinas_para_registrar = []
+    for vacina in pendentes_list:
+        if st.checkbox(vacina, key=f"vac_check_{vacina}"): 
+            vacinas_para_registrar.append(vacina)
+
+    # Botão de confirmação
+    if st.button("Confirmar Registro de Vacinas"):
+        if vacinas_para_registrar:
+            for v in vacinas_para_registrar:
+                st.session_state['pacientes'][selected_cpf]['vacinas_tomadas'].append(v)
+            
+            st.session_state['vacina_success_message'] = (
+                f"✅ **{len(vacinas_para_registrar)}** vacina(s) registrada(s) com sucesso "
+                f"para **{paciente['nome']}**!"
+            )
+            st.rerun()
+        else:
+            st.warning("Selecione pelo menos uma vacina para registrar.")
+
     # 2. CRIA O PLACEHOLDER NA PARTE INFERIOR
-    # O Streamlit renderiza os widgets na ordem. Este está no final da função.
     placeholder_msg = st.empty() 
 
     # 3. NA RECARGA, COLOCA A MENSAGEM NO PLACEHOLDER
     if 'vacina_success_message' in st.session_state:
-        # Usa o placeholder criado na parte inferior da tela para exibir a mensagem
         placeholder_msg.success(st.session_state['vacina_success_message'])
         del st.session_state['vacina_success_message']
 
+
 def tela_dashboard():
     """
-    Dashboard de Indicadores de Saúde.
-    Apresenta apenas dados anonimizados e agregados em conformidade com a LGPD.
+    Dashboard de Resumo Individual do Paciente.
+    Apresenta métricas e status de saúde do paciente selecionado.
     """
-    st.header("📊 Dashboard de Indicadores de Saúde")
-    st.caption("Dados agregados para análise de tendências. **Nenhuma informação pessoal sensível é exibida (LGPD).**")
+    st.header("📋 Resumo do Paciente")
+    st.caption("Visualização rápida de métricas e status de consultas/vacinas.")
     st.markdown("---")
 
-    pacientes_data = st.session_state['pacientes']
-    consultas_data = st.session_state['consultas']
-
-    # 1. Preparação dos Dados Anonimizados
-    
-    # Cria um DataFrame de pacientes para fácil agregação
-    if pacientes_data:
-        pacientes_df = pd.DataFrame(pacientes_data).T.reset_index(names=['cpf'])
-        # Apenas as colunas necessárias para agregação (anonimização)
-        pacientes_anon_df = pacientes_df[['idade', 'faixa_etaria', 'cidade']].copy()
-        pacientes_anon_df['cidade'] = pacientes_anon_df['cidade'].fillna('Não Informada')
-    else:
-        pacientes_anon_df = pd.DataFrame(columns=['idade', 'faixa_etaria', 'cidade'])
-
-    # 2. Key Metrics (Indicadores Chave)
-    
-    total_pacientes = len(pacientes_data)
-    total_consultas = sum(len(c) for c in consultas_data.values())
-
-    col1, col2, col3, col4 = st.columns(4)
-
-    col1.metric("Total de Pacientes Cadastrados", total_pacientes)
-    col2.metric("Total de Consultas Registradas", total_consultas)
-    
-    # ----------------------------------------------------
-    # Indicador de Cobertura Vacinal (Simulado)
-    # Apenas para pacientes com faixa etária definida
-    # ----------------------------------------------------
-    
-    if total_pacientes > 0:
-        # Conta quantos pacientes têm alguma vacina registrada
-        pacientes_vacinados = sum(1 for p in pacientes_data.values() if p.get('vacinas_tomadas'))
-        cobertura_perc = (pacientes_vacinados / total_pacientes) * 100 if total_pacientes else 0
-        col3.metric("Pacientes com Vacinas Registradas", f"{pacientes_vacinados} de {total_pacientes}", delta=f"{cobertura_perc:.1f}%")
+    pacientes_list = st.session_state['pacientes']
+    if not pacientes_list:
+        st.warning("Nenhum paciente cadastrado.")
+        return
         
-        # Média de Idade
-        media_idade = pacientes_anon_df['idade'].mean() if not pacientes_anon_df.empty else 0
-        col4.metric("Média de Idade dos Pacientes", f"{media_idade:.1f} anos")
+    # CRIAÇÃO DO MAPA NOME -> CPF (Para esconder o CPF no selectbox)
+    pacientes_options_map = {p['nome']: p_cpf for p_cpf, p in pacientes_list.items()}
+    pacientes_display_names = ["Selecione um paciente..."] + list(pacientes_options_map.keys())
     
-    st.markdown("---")
-    
-    # 3. Gráficos de Distribuição (Tendências)
-
-    # 3.2 Cidade de Origem
-    st.subheader("Origem dos Pacientes por Cidade de Residência")
-
-    # 3.1. Distribuição por Faixa Etária
-    st.subheader("Distribuição de Pacientes por Faixa Etária")
-    if not pacientes_anon_df.empty:
-        contagem_faixa = pacientes_anon_df['faixa_etaria'].value_counts().reset_index()
-        contagem_faixa.columns = ['Faixa Etária', 'Total']
+    # LÓGICA DE PRÉ-SELEÇÃO
+    cpf_para_preselecao = st.session_state.get('last_registered_cpf')
+    initial_index = 0
+    if cpf_para_preselecao and cpf_para_preselecao in pacientes_list:
+        nome_do_paciente = pacientes_list[cpf_para_preselecao]['nome']
+        initial_index = pacientes_display_names.index(nome_do_paciente)
         
-        st.bar_chart(contagem_faixa, x='Faixa Etária', y='Total')
-    else:
-        st.info("Cadastre pacientes para visualizar esta distribuição.")
+    selected_name = st.selectbox("Selecione o Paciente para Visualizar o Resumo", pacientes_display_names, index=initial_index)
 
-    st.markdown("---")
+    if selected_name != "Selecione um paciente...":
+        selected_cpf = pacientes_options_map[selected_name]
+        paciente = st.session_state['pacientes'][selected_cpf]
+        historico = st.session_state['consultas'].get(selected_cpf, [])
+        faixa = paciente['faixa_etaria']
+        vacinas_relevantes = VACINAS_POR_GRUPO.get(faixa, [])
+        vacinas_tomadas_set = set(paciente['vacinas_tomadas'])
 
-    # 3.2. Consultas por Especialidade (Se houver consultas)
-    st.subheader("Consultas Agendadas por Especialidade")
+        st.subheader(f"Resumo de **{paciente['nome']}**")
+        st.info(f"Idade: **{paciente['idade']}** anos | Faixa Etária: **{paciente['faixa_etaria']}** | Cidade: **{paciente['cidade']}**")
+        st.markdown("---")
 
-    if not pacientes_anon_df.empty:
-        contagem_cidade = pacientes_anon_df['cidade'].value_counts().reset_index()
-        contagem_cidade.columns = ['Cidade', 'Total']
+        # 1. Indicadores Chave (Metrics)
+        total_consultas = len(historico)
+        vacinas_pendentes = len(vacinas_relevantes) - len([v for v in vacinas_relevantes if v in vacinas_tomadas_set])
+        vacinas_aplicadas = len([v for v in vacinas_relevantes if v in vacinas_tomadas_set])
         
-        # Exibir as Top 10 cidades em um gráfico de barras
-        st.bar_chart(contagem_cidade.head(10), x='Cidade', y='Total')
-    else:
-        st.info("Cadastre pacientes com a cidade de residência para visualizar a distribuição.")
+        col1, col2, col3 = st.columns(3)
 
-    
-    if total_consultas > 0:
-        # Achata a lista de consultas em um DataFrame único
-        todas_consultas = []
-        for cpf, consultas in consultas_data.items():
-            for c in consultas:
-                todas_consultas.append({'especialidade': c['especialidade']})
+        col1.metric("Consultas Registradas", total_consultas)
+        col2.metric("Vacinas Aplicadas (Relevantes)", vacinas_aplicadas)
+        col3.metric("Vacinas Pendentes (Relevantes)", vacinas_pendentes)
         
-        consultas_df = pd.DataFrame(todas_consultas)
+        st.markdown("---")
+
+        # 2. Gráficos de Distribuição
         
-        contagem_especialidade = consultas_df['especialidade'].value_counts().reset_index()
-        contagem_especialidade.columns = ['Especialidade', 'Contagem']
+        # 2.1. Gráfico de Distribuição de Vacinas (Aplicadas vs. Pendentes)
+        st.subheader("Cobertura Vacinal do Paciente")
         
-        st.dataframe(contagem_especialidade, width='stretch', hide_index=True)
-        # st.bar_chart(contagem_especialidade, x='Especialidade', y='Contagem') # Gráfico opcional
-    else:
-        st.info("Registre consultas para visualizar esta distribuição.")
+        dados_cobertura = pd.DataFrame({
+            'Status': ['Aplicadas', 'Pendentes'],
+            'Contagem': [vacinas_aplicadas, vacinas_pendentes]
+        })
+        
+        # Gráfico de setores (Pie Chart)
+        if vacinas_aplicadas > 0 or vacinas_pendentes > 0:
+            st.bar_chart(
+                dados_cobertura,
+                x='Status',
+                y='Contagem',
+                color='Status'
+            )
+        else:
+            st.info("Nenhuma vacina relevante para esta faixa etária.")
+
+        st.markdown("---")
+        
+        # 2.2. Resumo de Consultas Recentes
+        st.subheader("Consultas por Especialidade")
+        
+        if historico:
+            # Cria DataFrame apenas com a coluna de especialidade
+            df_especialidades = pd.DataFrame(historico)['especialidade'].value_counts().reset_index()
+            df_especialidades.columns = ['Especialidade', 'Contagem']
+            
+            # Gráfico de barras
+            st.bar_chart(
+                df_especialidades,
+                x='Especialidade',
+                y='Contagem'
+            )
+            
+            st.caption("Últimas 5 Consultas Detalhadas:")
+            # Tabela de últimas consultas (como antes)
+            df_consultas = pd.DataFrame(historico)
+            df_consultas['data'] = pd.to_datetime(df_consultas['data']) 
+            df_consultas['data'] = df_consultas['data'].dt.strftime('%d/%m/%Y')
+            df_consultas = df_consultas.rename(columns={'data': 'Data', 'especialidade': 'Especialidade', 'observacoes': 'Observações'})
+            df_consultas = df_consultas.sort_values(by='Data', ascending=False)
+            
+            st.dataframe(df_consultas.head(5), hide_index=True, use_container_width=True)
+        else:
+            st.info("Nenhuma consulta registrada para exibir a distribuição por especialidade.")
+
+        st.markdown("---")
+
+        # 3. Resumo do Status Vacinal (Expander)
+        st.subheader("Status Detalhado da Vacinação")
+        
+        if vacinas_relevantes:
+            pendentes_list = [v for v in vacinas_relevantes if v not in vacinas_tomadas_set]
+            
+            if pendentes_list:
+                st.warning(f"Atenção: Existem {vacinas_pendentes} vacinas pendentes para a faixa etária {faixa}.")
+                
+                with st.expander("Ver Vacinas Pendentes"):
+                    for v in pendentes_list:
+                        st.markdown(f"- ❌ {v}")
+            else:
+                st.success(f"Excelente! Todas as {len(vacinas_relevantes)} vacinas relevantes para {faixa} estão registradas como aplicadas.")
+
+
+
 
 def tela_faq():
     """
