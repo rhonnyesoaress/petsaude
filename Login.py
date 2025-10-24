@@ -33,7 +33,7 @@ if 'usuarios' not in st.session_state:
     st.session_state['usuarios'] = {
         admin_cpf: {
             'nome': 'Usuário Admin', 
-            'senha': 'admin123',
+            'senha': '123',
             'nascimento': admin_nasc,
             'idade': admin_idade,
             'faixa_etaria': admin_faixa,
