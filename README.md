@@ -1,81 +1,83 @@
-# 🏥 Sistema de Gestão de Unidade de Saúde (PET Saúde - UFPB)
+PET-Saúde - Dashboard Pessoal de Saúde
+Status: 🚧 Em Desenvolvimento 🚧
 
-> Dashboard e Sistema de Cadastro para Unidades de Saúde, focado no gerenciamento de pacientes, agendamento de consultas e rastreamento de vacinação.
+Um dashboard de saúde pessoal construído com Streamlit, projetado para que usuários individuais possam gerenciar e acompanhar seu histórico de consultas e seu status de vacinação. O sistema utiliza a lógica do calendário do Ministério da Saúde para sugerir vacinas com base na faixa etária do usuário.
 
-Desenvolvido como parte das atividades do **PET Saúde/Interprofissionalidade - Grupo de Trabalho 09 (GT09)** da **Universidade Federal da Paraíba (UFPB)**.
+🌟 Principais Funcionalidades
+Sistema de Autenticação: Cadastro e login de usuários (pacientes) baseado em CPF, com validação de dados e armazenamento em sessão.
 
-## 🌟 Recursos Principais
+Dashboard Pessoal: Visualização rápida com métricas-chave (total de consultas, vacinas aplicadas vs. pendentes) e gráficos de distribuição.
 
-O sistema foi desenhado para ser intuitivo e funcional, com foco na integridade e privacidade dos dados:
+Gestão de Consultas: Registro de futuras consultas médicas, separadas por especialidade.
 
-* **👤 Cadastro Inteligente:** Registro com validação de CPF, cálculo automático de idade e classificação de faixa etária (Recém-Nascido, Criança, Adolescente/Jovem, Adulto, Idoso).
+Histórico Detalhado: Visualização em abas de todo o histórico de consultas passadas e do cartão de vacina completo.
 
-* **📝 Agendamento:** Permite agendamentos futuros de consultas, com seleção de especialidade padronizada e registro de observações.
- 
-* **💉 Cartão de Vacinação Dinâmico:** Visualização do status vacinal por faixa etária, com marcação de doses **[APLICADA]** através de caixas clicáveis, simulando um cartão de vacina.
- 
-* **📊 Dashboard Gerencial (LGPD Compliant):** Indicadores agregados e anonimizados, como distribuição por faixa etária, origem dos pacientes (cidade) e demanda por especialidade, sem exposição de dados sensíveis.
- 
-* **❓ FAQ Integrado:** Página de Dúvidas Frequentes para auto-serviço e referência rápida sobre as regras do sistema e calendário vacinal.
- 
-* **✨ Interface Moderna:** Desenvolvido com Streamlit, utilizando o tema escuro (preto/azul) para melhor usabilidade e experiência visual.
+Cartão de Vacina Inteligente: O sistema filtra e exibe automaticamente as vacinas relevantes (pendentes ou aplicadas) com base na faixa etária do usuário, calculada a partir da data de nascimento.
 
-## 🛡️ Conformidade e Privacidade (LGPD)
+Página de FAQ: Seção de ajuda explicando a lógica do sistema (cálculo de idade, grupos de vacinas, etc.).
 
-Em todas as análises gerenciais, o sistema prioriza a segurança dos dados, seguindo os princípios da Lei Geral de Proteção de Dados (LGPD):
+🛠️ Tech Stack (Tecnologias Utilizadas)
+Framework Principal: Streamlit
 
-* **Anonimato no Dashboard:** Dados sensíveis (Nomes, CPFs, Datas de Nascimento) são estritamente mantidos nas telas de gerenciamento individual. O Dashboard exibe apenas **contagens, médias e distribuições**.
-* **Integridade do CPF:** Utiliza validação matemática para garantir que apenas CPFs formalmente válidos sejam cadastrados.
+Análise e Manipulação de Dados: Pandas
 
-## ⚙️ Tecnologias Utilizadas
+Linguagem: Python 3
 
-O projeto é 100% baseado em Python e suas bibliotecas:
+📂 Estrutura do Projeto
+O projeto utiliza a arquitetura nativa de Multi-Page App (MPA) do Streamlit, onde login.py atua como o script principal de autenticação e roteamento.
 
-| Tecnologia | Versão Mínima | Função Principal |
-| :--- | :--- | :--- |
-| **Python** | 3.8+ | Linguagem principal de backend. |
-| **Streamlit** | 1.28+ | Framework para construção da Interface Gráfica Web. |
-| **Pandas** | 1.0+ | Manipulação, agregação de dados e visualização do Dashboard. |
+dashboard_pet/
+│
+├── 📄 login.py             # Script principal (Login, Cadastro de Usuário, Roteador)
+├── 📄 utils.py             # Funções (cálculo de idade, listas de vacinas, validador de CPF)
+│
+└── 📁 pages/               # Páginas acessíveis após o login
+    ├── 📄 dashboard.py
+    ├── 📄 visualizar_historico.py
+    ├── 📄 cadastro_consulta.py
+    ├── 📄 registrar_vacina.py
+    └── 📄 faq.py
+🚀 Como Executar o Projeto
+Siga os passos abaixo para executar o projeto localmente.
 
-## 🚀 Como Rodar o Sistema Localmente
+1. Pré-requisitos
+Python 3.9+
 
-Siga os passos abaixo para instalar e executar o projeto em seu ambiente:
+Git (Opcional, para clonar)
 
-### Pré-requisitos
+2. Instalação
+Clone o repositório:
 
-Certifique-se de ter o **Python (versão 3.8 ou superior)** e o **Git** instalados.
+Bash
 
-1.  **Clone o Repositório:**
-    ```bash
-    git clone https://github.com/rhonnyesoaress/petsaude
-    cd nome_do_seu_diretorio
-    ```
+git clone https://github.com/seu-usuario/dashboard_pet.git
+cd dashboard_pet
+(Recomendado) Crie e ative um ambiente virtual:
 
-2.  **Crie e Ative o Ambiente Virtual:**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # No Windows (CMD/PowerShell) use: .\venv\Scripts\activate
-    ```
+Bash
 
-3.  **Instale as Dependências:**
-    Crie o arquivo `requirements.txt` se ele não existir e instale as bibliotecas:
-    ```bash
-    pip install -r requirements.txt
-    ```
+# Windows
+python -m venv venv
+.\venv\Scripts\activate
 
+# macOS/Linux
+python3 -m venv venv
+source venv/bin/activate
+Crie um arquivo requirements.txt na raiz do projeto com o seguinte conteúdo:
 
-4.  **Execute o Aplicativo:**
-    ```bash
-    streamlit run app_pet.py
-    ```
+Plaintext
 
-O sistema será aberto automaticamente no seu navegador, geralmente em `http://localhost:8501`.
+streamlit
+pandas
+Instale as dependências:
 
-## 🤝 Contribuição e Contato
+Bash
 
-Este projeto é um esforço contínuo do **PET Saúde - GT09** da UFPB.
+pip install -r requirements.txt
+3. Execução
+Na pasta raiz do projeto (onde está o login.py), execute o Streamlit:
 
-Para sugestões, relatórios de bugs, ou dúvidas sobre o projeto, por favor, utilize o sistema de **Issues** do GitHub.
+Bash
 
----
-*Desenvolvedor Principal: Rhonnye Wendell | UFPB | PET Saúde*
+streamlit run login.py
+O aplicativo será aberto automaticamente no seu navegador padrão.
