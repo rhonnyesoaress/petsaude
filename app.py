@@ -469,11 +469,43 @@ def cronograma():
     conn.close()
     return render_template('cronograma.html', especialidades=especialidades)
 
-@app.route('/lembretes')
+@app.route('/lembretes', methods=['GET', 'POST'])
 @login_required
 def lembretes():
-    """Tela de Lembretes (Usa o main.js e localStorage)."""
-    return render_template('lembretes.html')
+    cpf = session['cpf_logado'] # Usando a chave correta da sua sessão
+    
+    if request.method == 'POST':
+        # Captura os dados do formulário vistoso
+        nome_remedio = request.form.get('nome_remedio')
+        horario = request.form.get('horario')
+
+        if nome_remedio and horario:
+            conn = get_db_connection()
+            conn.execute('INSERT INTO lembretes (cpf_usuario, nome_remedio, horario) VALUES (?, ?, ?)',
+                         (cpf, nome_remedio, horario))
+            conn.commit()
+            conn.close()
+            flash('Lembrete adicionado!', 'success')
+        return redirect(url_for('lembretes'))
+
+    # Listagem dos lembretes
+    conn = get_db_connection()
+    lembretes_db = conn.execute(
+        'SELECT * FROM lembretes WHERE cpf_usuario = ? ORDER BY horario', (cpf,)
+    ).fetchall()
+    conn.close()
+    
+    return render_template('lembretes.html', lembretes=lembretes_db)
+
+@app.route('/remover_lembrete/<int:id>', methods=['POST'])
+@login_required
+def remover_lembrete(id):
+    cpf = session['cpf_logado']
+    conn = get_db_connection()
+    conn.execute('DELETE FROM lembretes WHERE id = ? AND cpf_usuario = ?', (id, cpf))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('lembretes'))
 
 @app.route('/api/lembretes')
 @login_required

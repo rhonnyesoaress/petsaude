@@ -536,152 +536,127 @@ body {
 /* =========================================
    LEMBRETES - NOVO DESIGN
    ========================================= */
+/* =========================================
+   REESTRUTURAÇÃO: LEMBRETES PREMIUM
+   ========================================= */
 
+/* Cabeçalho com Degradê Suave */
 .lembretes-header {
-    margin-bottom: 40px;
-}
-
-.lembretes-header h1 {
-    font-size: 2.5em;
-    color: #0056b3;
-    margin: 0 0 8px 0;
-    font-weight: 700;
-}
-
-.lembretes-header .lead {
-    color: #999;
-    font-size: 1.05em;
-    margin: 0;
-}
-
-/* Card do Formulário */
-.card-form {
-    background: #ffffff;
-    border: 1px solid #e0e0e0;
+    padding: 30px 0;
+    background: linear-gradient(to bottom, #e3f2fd, #f4f7f6);
+    border-radius: 0 0 30px 30px;
+    margin-top: -30px; /* Alinha com a navbar */
     margin-bottom: 30px;
 }
 
-.card-form h3 {
-    color: #0056b3;
-    margin-top: 0;
-    margin-bottom: 20px;
-    font-size: 1.15em;
-    font-weight: 600;
+.lembretes-header h1 {
+    font-size: 2rem;
+    color: #0d47a1;
+    font-weight: 800;
 }
 
-.form-lembrete .form-row {
-    display: grid;
-    grid-template-columns: 1fr 200px auto;
-    gap: 15px;
-    align-items: flex-end;
-}
-
-.form-lembrete .form-group {
-    margin-bottom: 0;
-}
-
-.form-lembrete .form-group label {
-    font-size: 0.9em;
-    color: #333;
-    margin-bottom: 6px;
-    font-weight: 500;
-}
-
-.form-lembrete .form-control {
-    border: 1px solid #d0d0d0;
-    padding: 10px 12px;
-    font-size: 0.95em;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-}
-
-.form-lembrete .form-control:focus {
-    outline: none;
-    border-color: #333;
-    box-shadow: none;
-}
-
-.form-lembrete .form-group-btn {
-    display: flex;
-}
-
-.form-lembrete .btn {
-    padding: 10px 25px;
-    font-size: 0.95em;
-    border-radius: 6px;
-    font-weight: 600;
-}
-
-/* Card da Lista */
-.card-lista {
+/* Card de Adicionar Lembrete */
+.add-reminder-card {
     background: #ffffff;
+    border: none;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0, 86, 179, 0.08);
+    margin-bottom: 40px;
 }
 
-.card-lista h3 {
-    color: #333;
-    margin-top: 0;
-    margin-bottom: 20px;
-    font-size: 1.2em;
-}
-
-.lembretes-lista {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+.add-reminder-card h3 {
+    font-size: 1.1rem;
+    color: #1a237e;
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 12px;
+    margin-bottom: 20px;
 }
 
-.lembrete-row {
-    display: grid;
-    grid-template-columns: 1fr 90px 45px;
-    gap: 20px;
-    align-items: center;
-    padding: 18px 22px;
-    background: #ffffff;
-    border: 2px solid #e8e8f0;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
+/* Inputs Modernos */
+.input-custom {
+    border: 2px solid #f0f4f8;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 12px 15px;
+    transition: 0.3s;
 }
 
-.lembrete-row:hover {
-    box-shadow: 0 8px 20px rgba(0, 86, 179, 0.12);
-    border-color: #b3d9ff;
-    transform: translateY(-2px);
+.input-custom:focus {
+    border-color: #007bff;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.1);
+    outline: none;
 }
 
-.lembrete-hora-badge {
-    background: #ffffff;
-    color: #000000;
-    font-size: 1.1em;
-    font-weight: 700;
-    text-align: center;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-family: 'Courier New', monospace;
-    min-width: 60px;
-    border: 2px solid #333333;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-}
-
-.lembrete-row:hover .lembrete-hora-badge {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.lembrete-content-row {
+/* Lista de Cards de Medicamentos */
+.reminder-card-item {
+    background: #fff;
+    border: none;
+    border-radius: 18px;
+    padding: 20px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    transition: transform 0.2s;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
 }
 
-.lembrete-nome-row {
-    font-weight: 600;
-    color: #333;
-    font-size: 1.05em;
-    word-break: break-word;
+.reminder-card-item:hover {
+    transform: scale(1.02);
 }
+
+.reminder-icon-box {
+    width: 50px;
+    height: 50px;
+    background: #eef2ff;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.reminder-details .med-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #333;
+    display: block;
+}
+
+.reminder-details .time-badge {
+    color: #0056b3;
+    font-weight: 700;
+    font-size: 0.85rem;
+    background: #e3f2fd;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+/* Botão de remover (X) nos lembretes */
+.btn-outline-danger.rounded-circle {
+    display: flex;          /* Ativa o Flexbox */
+    align-items: center;    /* Centraliza verticalmente */
+    justify-content: center; /* Centraliza horizontalmente */
+    padding: 0;             /* Remove paddings que podem deslocar o X */
+    line-height: 1;         /* Garante que a altura da linha não empurre o ícone */
+    font-size: 1rem;        /* Tamanho ideal para o X */
+}
+
+/* Ajuste específico para o card do lembrete */
+.reminder-card-item {
+    display: flex;
+    align-items: center;    /* Mantém o conteúdo e o botão na mesma linha central */
+    justify-content: space-between;
+}
+
+/* Ajustes Mobile no @media 768px */
+@media (max-width: 768px) {
+    .reminder-card-item { padding: 15px; }
+    .reminder-icon-box { width: 40px; height: 40px; font-size: 1.2rem; }
+}
+
 
 .btn-remove-row {
     background-color: transparent;
