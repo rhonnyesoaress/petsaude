@@ -1,47 +1,56 @@
 {% extends 'layout.html' %}
-
 {% block content %}
-<div class="lembretes-header">
-    <h1>⏰ Lembretes de Remédios</h1>
-    <p class="lead">Gerencie seus horários de medicamentos</p>
+
+<div class="lembretes-header text-center">
+    <h1><span style="font-size: 2.5rem;">⏰</span> Meus Lembretes</h1>
 </div>
 
-<div class="card card-form">
-    <h3>➕ Novo Lembrete</h3>
-    <form id="form-lembrete" class="form-lembrete">
-        <div class="form-row">
-            <div class="form-group">
-                <label for="remedio-nome">Nome do Remédio</label>
-                <input type="text" id="remedio-nome" class="form-control" placeholder="Ex: Paracetamol" required>
+<div class="container" style="max-width: 600px;">
+    
+    <div class="add-reminder-card">
+        <h3>Adicionar Novo Medicamento</h3>
+        <form action="{{ url_for('lembretes') }}" method="POST">
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-muted">Remédio</label>
+                <input type="text" name="nome_remedio" class="form-control input-custom" placeholder="Ex: Paracetamol 500mg" required>
             </div>
-            <div class="form-group">
-                <label for="remedio-horario">Horário</label>
-                <input type="time" id="remedio-horario" class="form-control" required>
+            <div class="row g-3">
+                <div class="col-7">
+                    <label class="form-label small fw-bold text-muted">Horário</label>
+                    <input type="time" name="horario" class="form-control input-custom" required>
+                </div>
+                <div class="col-5 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold shadow-sm" style="border-radius: 12px;">
+                        Salvar
+                    </button>
+                </div>
             </div>
-            <div class="form-group-btn">
-                <button type="submit" class="btn btn-primary">Adicionar</button>
-            </div>
-        </div>
-    </form>
-</div>
-
-<div class="card card-lista">
-    <h3>📋 Seus Lembretes</h3>
-    <ul id="lista-lembretes-container" class="lembretes-lista">
-        <li class="lembrete-row">
-            <div class="lembrete-content-row">
-                <span class="lembrete-nome-row">Paracetamol</span>
-            </div>
-            <div class="lembrete-hora-badge">12:00</div>
-            <button class="btn-remove-row">🗑️</button>
-        </li>
-    </ul>
-    <div class="empty-state" id="empty-state" style="display: none;">
-        <p>Nenhum lembrete adicionado ainda 🤔</p>
+        </form>
     </div>
-</div>
 
-<script>
-// Placeholder para JavaScript futura funcionalidade
-</script>
-{% endblock %}
+    {% if lembretes %}
+    <div class="mt-5">
+        <div class="mb-4 d-flex justify-content-between align-items-center">
+            <h4 class="h6 fw-bold text-muted text-uppercase" style="letter-spacing: 1px;">Histórico</h4>
+        </div>
+
+        {% for lembrete in lembretes %}
+        <div class="reminder-card-item">
+            <div class="d-flex align-items-center gap-3">
+                <div class="reminder-details">
+                    <span class="med-name">{{ lembrete.nome_remedio }}</span>
+                    <span class="time-badge">{{ lembrete.horario }}</span>
+                </div>
+            </div>
+            
+            <form action="{{ url_for('remover_lembrete', id=lembrete.id) }}" method="POST">
+                <button type="submit" class="btn btn-sm btn-outline-danger border-0 rounded-circle" style="width: 35px; height: 35px;">
+                    ✕
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div> {% endblock %}
