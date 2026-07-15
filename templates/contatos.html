@@ -1,0 +1,43 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<div class="dashboard-header">
+    <h2 class="section-title">📞 Contatos da Rede Municipal de Saúde</h2>
+    <p class="text-muted">Endereços e ramais dos serviços externos de João Pessoa.</p>
+</div>
+
+{% for categoria in contatos %}
+<div class="contato-categoria">
+    <h3 class="contato-categoria-title">{{ categoria.icone }} {{ categoria.categoria }}</h3>
+
+    <div class="contato-unidades-grid">
+        {% for unidade in categoria.unidades %}
+        <div class="card contato-unidade-card">
+            <div class="contato-unidade-header">
+                <h4>{{ unidade.nome }}</h4>
+                <p class="contato-endereco">📍 {{ unidade.endereco }}</p>
+            </div>
+            <table class="styled-table contato-table">
+                <thead>
+                    <tr>
+                        <th>Setor</th>
+                        <th>Ramal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contato in unidade.contatos %}
+                    <tr>
+                        <td>{{ contato.setor }}</td>
+                        <td>{{ contato.ramal }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}
