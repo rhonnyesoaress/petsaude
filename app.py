@@ -186,6 +186,97 @@ DETALHES_GRUPOS = {
 }
 
 
+CONTATOS_EXTERNOS = [
+    {
+        'categoria': 'Secretaria Municipal de Saúde',
+        'icone': '🏢',
+        'unidades': [
+            {
+                'nome': 'Secretaria Municipal de Saúde',
+                'endereco': 'Av. Júlia Freire, S/Nº - Torre',
+                'contatos': [
+                    {'setor': 'Ouvidoria', 'ramal': '3213-7530 / 3213-7531 / 3213-7948 / 3213-7949'},
+                    {'setor': 'Recepção', 'ramal': '3213-7792'},
+                    {'setor': 'Serviço Social', 'ramal': '3213-7541'},
+                ]
+            }
+        ]
+    },
+    {
+        'categoria': 'CAPS (Centro de Atenção Psicossocial)',
+        'icone': '🧠',
+        'unidades': [
+            {
+                'nome': 'CAPS Cirandar',
+                'endereco': 'Rua Gouveia Nobrega, S/Nº - Roger',
+                'contatos': [
+                    {'setor': 'Recepção', 'ramal': '3213-7614'},
+                ]
+            },
+            {
+                'nome': 'CAPS - Caminhar',
+                'endereco': 'Rua Paulino Santos Coelho, S/Nº - Cidade Universitária',
+                'contatos': [
+                    {'setor': 'Recepção', 'ramal': '3213-7615'},
+                    {'setor': 'Serviço Social', 'ramal': '3213-7753'},
+                    {'setor': 'Direção', 'ramal': '3213-7624'},
+                    {'setor': 'Enfermagem', 'ramal': '3213-7752'},
+                ]
+            },
+            {
+                'nome': 'CAPS AD - David Capistrano da Costa Filho',
+                'endereco': 'Rua Prof° Álvaro Carvalho, S/Nº - Tambauzinho',
+                'contatos': [
+                    {'setor': 'Recepção', 'ramal': '3213-7616'},
+                ]
+            },
+            {
+                'nome': 'CAPS - Gutemberg Botelho',
+                'endereco': 'Av. Minas Gerais, Nº 409 - Bairro dos Estados',
+                'contatos': [
+                    {'setor': 'Recepção', 'ramal': '3213-7617'},
+                ]
+            },
+            {
+                'nome': 'CAPS - Unidade de Acolhimento Infanto Juvenil (UAI)',
+                'endereco': 'Rua Gouveia Nobrega, S/Nº - Roger',
+                'contatos': [
+                    {'setor': 'Sala 3 - Equipe Multiprofissional', 'ramal': '3213-7618'},
+                ]
+            },
+        ]
+    },
+    {
+        'categoria': 'Cartão SUS',
+        'icone': '💳',
+        'unidades': [
+            {
+                'nome': 'Cartão SUS',
+                'endereco': 'Av. Rui Barbosa, S/Nº - Torre',
+                'contatos': [
+                    {'setor': 'Recepção', 'ramal': '3213-7637'},
+                ]
+            }
+        ]
+    },
+    {
+        'categoria': 'Centro de Doenças Raras',
+        'icone': '🧬',
+        'unidades': [
+            {
+                'nome': 'Centro de Doenças Raras',
+                'endereco': 'Rua Esmeraldo Gomes Vieira, S/Nº - Bancários',
+                'contatos': [
+                    {'setor': 'Recepção', 'ramal': '3213-7620'},
+                    {'setor': 'Serviço Social', 'ramal': '3213-7784'},
+                    {'setor': 'Regulação', 'ramal': '3213-7875'},
+                ]
+            }
+        ]
+    },
+]
+
+
 def is_cpf_valido(cpf: str) -> bool:
     """Valida um CPF brasileiro."""
     
@@ -570,6 +661,12 @@ def api_delete_lembrete():
     conn.close()
     
     return jsonify({'message': 'Lembrete deletado com sucesso'}), 200
+
+@app.route('/contatos')
+@login_required
+def contatos_externos():
+    """Tela de Contatos - Endereços e telefones da rede municipal de saúde."""
+    return render_template('contatos.html', contatos=CONTATOS_EXTERNOS)
 
 @app.route('/contato', methods=['GET', 'POST'])
 def contato():

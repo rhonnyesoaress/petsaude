@@ -1001,3 +1001,65 @@ body {
     background: white;
     color: #0056b3 !important;
 }
+
+/* =========================================
+   9. CONTATOS (REDE MUNICIPAL DE SAÚDE)
+   ========================================= */
+.contato-categoria {
+    margin-bottom: 40px;
+}
+
+.contato-categoria-title {
+    font-size: 1.3em;
+    color: #333;
+    margin-bottom: 18px;
+    border-left: 5px solid #0056b3;
+    padding: 5px 0 5px 15px;
+    background: linear-gradient(to right, #f9f9f9, #fff);
+    border-radius: 0 5px 5px 0;
+}
+
+.contato-unidades-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.contato-unidade-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.contato-unidade-header {
+    padding: 18px 20px;
+    background: #f0f7ff;
+    border-bottom: 1px solid #e1ecf7;
+}
+
+.contato-unidade-header h4 {
+    margin: 0 0 6px;
+    color: #0d47a1;
+    font-size: 1.05em;
+}
+
+.contato-endereco {
+    margin: 0;
+    color: #666;
+    font-size: 0.85em;
+}
+
+.contato-table {
+    margin: 0;
+}
+
+.contato-table th,
+.contato-table td {
+    padding: 10px 20px;
+    font-size: 0.9em;
+}
+
+@media (max-width: 768px) {
+    .contato-unidades-grid {
+        grid-template-columns: 1fr;
+    }
+}
