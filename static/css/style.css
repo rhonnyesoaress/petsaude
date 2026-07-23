@@ -547,20 +547,6 @@ body {
    REESTRUTURAÇÃO: LEMBRETES PREMIUM
    ========================================= */
 
-/* Cabeçalho com Degradê Suave */
-.lembretes-header {
-    padding: 30px 0;
-    background: linear-gradient(to bottom, #e3f2fd, #f4f7f6);
-    border-radius: 0 0 30px 30px;
-    margin-top: -30px; /* Alinha com a navbar */
-    margin-bottom: 30px;
-}
-
-.lembretes-header h1 {
-    font-size: 2rem;
-    color: #0d47a1;
-    font-weight: 800;
-}
 
 /* Card de Adicionar Lembrete */
 .add-reminder-card {
@@ -774,9 +760,7 @@ body {
         font-size: 0.95em;
     }
     
-    .lembretes-header h1 {
-        font-size: 1.8em;
-    }
+
 }
 
 /* Alertas */
@@ -824,8 +808,8 @@ body {
     .user-brand, .navbar-brand {
         font-size: 1.1rem !important; /* Nome do usuário menor */
     }
-    .lembretes-header h1, .detail-title-group h2 {
-        font-size: 1.6rem !important; /* Títulos de página menos "gritantes" */
+    .detail-title-group h2 {
+        font-size: 1.6rem !important;
     }
     .nav-link {
         font-size: 0.85rem !important; /* Links do menu menores */
@@ -996,19 +980,6 @@ body {
 /* =========================================
    CARTÃO VACINAL
    ========================================= */
-.vacinal-header {
-    padding: 30px 0;
-    background: linear-gradient(to bottom, #e3f2fd, #f4f7f6);
-    border-radius: 0 0 30px 30px;
-    margin-top: -30px;
-    margin-bottom: 30px;
-}
-
-.vacinal-header h1 {
-    font-size: 2rem;
-    color: #0d47a1;
-    font-weight: 800;
-}
 
 .vacinal-wrapper {
     display: flex;
