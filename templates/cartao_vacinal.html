@@ -1,0 +1,62 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<div class="vacinal-header text-center">
+    <h1><span style="font-size: 2.5rem;">💉</span> Cartão Vacinal</h1>
+</div>
+
+<div class="vacinal-wrapper">
+    <div class="vacinal-sidebar">
+        <div class="vacinal-avatar">👤</div>
+        <h3 class="vacinal-nome">{{ usuario.nome }}</h3>
+        <p class="vacinal-idade">{{ usuario.sexo }} &nbsp;•&nbsp; {{ idade_anos }}A, {{ idade_meses }}M e {{ idade_dias }}D</p>
+
+        <div class="vacinal-secao">
+            <h4>Identificação</h4>
+            <div class="vacinal-info-item">
+                <span class="label">Nascimento</span>
+                <span class="valor">{{ usuario.data_nascimento | data_br }}</span>
+            </div>
+            <div class="vacinal-info-item">
+                <span class="label">CPF</span>
+                <span class="valor">{{ usuario.cpf | cpf_br }}</span>
+            </div>
+        </div>
+
+        <div class="vacinal-secao">
+            <h4>Endereço</h4>
+            <p class="vacinal-endereco">
+                {{ usuario.rua }}, {{ usuario.numero }},<br>
+                {{ usuario.bairro }} - {{ usuario.estado }}
+            </p>
+        </div>
+    </div>
+
+    <div class="vacinal-conteudo">
+        <div class="vacinal-conteudo-header">
+            <span>💉 Caderneta Vacinal &mdash; {{ calendario.titulo }}</span>
+        </div>
+
+        {% for vacina in calendario.vacinas %}
+        <div class="vacina-row">
+            <div class="vacina-nome">{{ vacina.nome | upper }}</div>
+            <div class="vacina-doses">
+                {% for dose in vacina.doses %}
+                {% set data_dose = aplicadas.get(vacina.nome ~ '|' ~ dose) %}
+                <div class="dose-box {% if data_dose %}dose-aplicada{% endif %}">
+                    <span class="dose-label">{{ dose | upper }}</span>
+                    {% if data_dose %}
+                    <span class="dose-info">
+                        1 aplicação<br>
+                        <span class="dose-data">💉 {{ data_dose | data_br }}</span>
+                    </span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

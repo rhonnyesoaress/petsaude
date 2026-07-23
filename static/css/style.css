@@ -504,6 +504,13 @@ body {
     box-sizing: border-box;
 }
 
+/* Contorno vermelho persistente em campos inválidos, após o usuário interagir */
+.form-control.touched:invalid,
+.input-custom.touched:invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.15);
+}
+
 .btn {
     padding: 10px 15px;
     border: none; border-radius: 5px;
@@ -655,6 +662,55 @@ body {
 @media (max-width: 768px) {
     .reminder-card-item { padding: 15px; }
     .reminder-icon-box { width: 40px; height: 40px; font-size: 1.2rem; }
+}
+
+/* Tabela de Medicamentos de Uso Contínuo */
+.med-table-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 86, 179, 0.08);
+}
+
+.med-table-header {
+    background: #0056b3;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 14px 20px;
+}
+
+.table-medicamentos {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-medicamentos th {
+    background-color: #f9f9f9;
+    color: #888;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.table-medicamentos td {
+    padding: 14px 15px;
+    font-size: 0.85rem;
+    color: #333;
+    border-bottom: 1px solid #f1f1f1;
+    vertical-align: middle;
+}
+
+.table-medicamentos tbody tr:last-child td {
+    border-bottom: none;
+}
+
+@media (max-width: 768px) {
+    .table-medicamentos th,
+    .table-medicamentos td { padding: 10px 8px; font-size: 0.75rem; }
 }
 
 
@@ -935,6 +991,185 @@ body {
     letter-spacing: 1px;
     padding: 12px 15px;
     border-bottom: 2px solid #eee;
+}
+
+/* =========================================
+   CARTÃO VACINAL
+   ========================================= */
+.vacinal-header {
+    padding: 30px 0;
+    background: linear-gradient(to bottom, #e3f2fd, #f4f7f6);
+    border-radius: 0 0 30px 30px;
+    margin-top: -30px;
+    margin-bottom: 30px;
+}
+
+.vacinal-header h1 {
+    font-size: 2rem;
+    color: #0d47a1;
+    font-weight: 800;
+}
+
+.vacinal-wrapper {
+    display: flex;
+    gap: 25px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.vacinal-sidebar {
+    flex: 0 0 260px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 25px 20px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 86, 179, 0.08);
+}
+
+.vacinal-avatar {
+    width: 70px;
+    height: 70px;
+    background: #eef2ff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 0 auto 12px;
+}
+
+.vacinal-nome {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.vacinal-idade {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.vacinal-secao {
+    text-align: left;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 15px;
+    margin-top: 15px;
+}
+
+.vacinal-secao h4 {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #999;
+    margin-bottom: 10px;
+}
+
+.vacinal-info-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.vacinal-info-item .label { color: #888; }
+.vacinal-info-item .valor { font-weight: 600; color: #333; }
+
+.vacinal-endereco {
+    font-size: 0.85rem;
+    color: #444;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.vacinal-conteudo {
+    flex: 1 1 500px;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 86, 179, 0.08);
+}
+
+.vacinal-conteudo-header {
+    background: #0056b3;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 14px 20px;
+}
+
+.vacina-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f1f1f1;
+    gap: 15px;
+}
+
+.vacina-row:last-child { border-bottom: none; }
+
+.vacina-nome {
+    flex: 0 0 180px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #333;
+    display: flex;
+    align-items: center;
+}
+
+.vacina-doses {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.dose-box {
+    background: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 10px 14px;
+    min-width: 140px;
+    flex: 1 1 140px;
+}
+
+.dose-box .dose-label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #999;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.dose-box.dose-aplicada {
+    background: #e6f7ec;
+    border: 1px solid #34c76f;
+}
+
+.dose-box.dose-aplicada .dose-label { color: #1e8449; }
+
+.dose-info {
+    font-size: 0.75rem;
+    color: #333;
+}
+
+.dose-data {
+    display: inline-block;
+    margin-top: 4px;
+    background: #34c76f;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+@media (max-width: 768px) {
+    .vacinal-sidebar { flex: 1 1 100%; }
+    .vacina-nome { flex: 0 0 100%; }
 }
 
 .table-cronograma td {

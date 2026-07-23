@@ -11,6 +11,7 @@ cursor.execute('DROP TABLE IF EXISTS medicos')
 cursor.execute('DROP TABLE IF EXISTS usuarios')
 cursor.execute('DROP TABLE IF EXISTS lembretes')
 cursor.execute('DROP TABLE IF EXISTS contatos') # Nova tabela
+cursor.execute('DROP TABLE IF EXISTS vacinas_aplicadas')
 
 # --- Tabela de Usuários ---
 cursor.execute('''
@@ -18,7 +19,14 @@ CREATE TABLE usuarios (
     cpf TEXT PRIMARY KEY,
     nome TEXT NOT NULL,
     senha_hash TEXT NOT NULL,
-    grupo_risco TEXT
+    grupo_risco TEXT,
+    data_nascimento TEXT,
+    sexo TEXT,
+    cep TEXT,
+    rua TEXT,
+    bairro TEXT,
+    estado TEXT,
+    numero TEXT
 )
 ''')
 
@@ -35,13 +43,27 @@ CREATE TABLE medicos (
 )
 ''')
 
-# --- Tabela de Lembretes ---
+# --- Tabela de Lembretes (Medicamentos de Uso Contínuo) ---
 cursor.execute('''
 CREATE TABLE lembretes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     cpf_usuario TEXT NOT NULL,
     nome_remedio TEXT NOT NULL,
-    horario TEXT NOT NULL,
+    data_inicio TEXT NOT NULL,
+    posologia TEXT NOT NULL,
+    prescrito_por TEXT NOT NULL,
+    FOREIGN KEY (cpf_usuario) REFERENCES usuarios (cpf)
+)
+''')
+
+# --- Tabela de Vacinas Aplicadas (Cartão Vacinal) ---
+cursor.execute('''
+CREATE TABLE vacinas_aplicadas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cpf_usuario TEXT NOT NULL,
+    vacina TEXT NOT NULL,
+    dose TEXT NOT NULL,
+    data_aplicacao TEXT NOT NULL,
     FOREIGN KEY (cpf_usuario) REFERENCES usuarios (cpf)
 )
 ''')
@@ -59,8 +81,26 @@ CREATE TABLE contatos (
 
 # --- Inserindo Usuários ---
 senha_hashed = generate_password_hash('123')
-cursor.execute("INSERT INTO usuarios VALUES (?, ?, ?, ?)", 
-               ('71192887417', 'Usuário Admin', senha_hashed, 'Hipertenso'))
+cursor.execute("INSERT INTO usuarios VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+               ('71192887417', 'Usuário Admin', senha_hashed, 'Hipertenso', '1980-01-01',
+                'Feminino', '58045070', 'Rua Santa Inês', 'Miramar', 'PB', '444'))
+
+# --- Inserindo Vacinas Aplicadas (dados fake para demonstração do Cartão Vacinal) ---
+vacinas_aplicadas_demo = [
+    ('71192887417', 'Hepatite B', '1ª Dose', '2005-03-15'),
+    ('71192887417', 'Hepatite B', '2ª Dose', '2005-04-20'),
+    ('71192887417', 'Hepatite B', '3ª Dose', '2005-09-15'),
+    ('71192887417', 'Febre Amarela', 'Dose Única', '2010-06-10'),
+    ('71192887417', 'Tríplice Viral (SCR)', '1ª Dose', '1981-05-10'),
+    ('71192887417', 'Dupla Adulto (dT)', '1ª Dose', '2016-02-01'),
+    ('71192887417', 'Dupla Adulto (dT)', '2ª Dose', '2016-04-01'),
+    ('71192887417', 'Dupla Adulto (dT)', '3ª Dose', '2016-06-01'),
+    ('71192887417', 'Dupla Adulto (dT)', 'Reforço', '2026-07-09'),
+]
+cursor.executemany(
+    "INSERT INTO vacinas_aplicadas (cpf_usuario, vacina, dose, data_aplicacao) VALUES (?, ?, ?, ?)",
+    vacinas_aplicadas_demo
+)
 
 # --- Inserindo Dados Reais da USF TITO SILVA (Do PDF) ---
 # Formato: (Serviço, Categoria/Especialidade, Dia, Horário)

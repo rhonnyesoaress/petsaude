@@ -2,10 +2,43 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from functools import wraps
 import sqlite3
 import re
+from datetime import date, timedelta
 from werkzeug.security import check_password_hash, generate_password_hash # Importa o verificador de senha
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'uma-chave-secreta-muito-forte'
+
+def cpf_valido(cpf):
+    """Valida um CPF pelo algoritmo dos dígitos verificadores."""
+    if len(cpf) != 11 or not cpf.isdigit() or cpf == cpf[0] * 11:
+        return False
+
+    soma = sum(int(cpf[i]) * (10 - i) for i in range(9))
+    resto = (soma * 10) % 11
+    digito1 = resto if resto < 10 else 0
+    if digito1 != int(cpf[9]):
+        return False
+
+    soma = sum(int(cpf[i]) * (11 - i) for i in range(10))
+    resto = (soma * 10) % 11
+    digito2 = resto if resto < 10 else 0
+    return digito2 == int(cpf[10])
+
+@app.template_filter('data_br')
+def data_br(data_iso):
+    """Converte data 'AAAA-MM-DD' para 'DD/MM/AAAA'."""
+    try:
+        ano, mes, dia = data_iso.split('-')
+        return f'{dia}/{mes}/{ano}'
+    except (ValueError, AttributeError):
+        return data_iso
+
+@app.template_filter('cpf_br')
+def cpf_br(cpf):
+    """Formata um CPF de 11 dígitos como 'XXX.XXX.XXX-XX'."""
+    if cpf and len(cpf) == 11 and cpf.isdigit():
+        return f'{cpf[0:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:11]}'
+    return cpf
 
 DICAS_SAUDE = {
     'Hipertenso': [
@@ -276,47 +309,89 @@ CONTATOS_EXTERNOS = [
     },
 ]
 
+CALENDARIO_VACINAL = {
+    'crianca': {
+        'titulo': 'Criança (0 a 9 anos)',
+        'vacinas': [
+            {'nome': 'BCG', 'doses': ['Dose Única']},
+            {'nome': 'Hepatite B', 'doses': ['Ao Nascer']},
+            {'nome': 'Pentavalente (DTP/Hib/HepB)', 'doses': ['1ª Dose', '2ª Dose', '3ª Dose']},
+            {'nome': 'Poliomielite (VIP/VOP)', 'doses': ['1ª Dose', '2ª Dose', '3ª Dose', 'Reforço 1', 'Reforço 2']},
+            {'nome': 'Pneumocócica 10V', 'doses': ['1ª Dose', '2ª Dose', 'Reforço']},
+            {'nome': 'Rotavírus', 'doses': ['1ª Dose', '2ª Dose']},
+            {'nome': 'Meningocócica ACWY', 'doses': ['1ª Dose', '2ª Dose', 'Reforço']},
+            {'nome': 'Febre Amarela', 'doses': ['Dose Única']},
+            {'nome': 'Tríplice Viral (SCR)', 'doses': ['1ª Dose', '2ª Dose']},
+            {'nome': 'Varicela', 'doses': ['Dose Única']},
+            {'nome': 'DTP (Reforço)', 'doses': ['Reforço 1', 'Reforço 2']},
+            {'nome': 'Hepatite A', 'doses': ['Dose Única']},
+        ]
+    },
+    'adolescente': {
+        'titulo': 'Adolescente (10 a 19 anos)',
+        'vacinas': [
+            {'nome': 'Dupla Adulto (dT)', 'doses': ['Reforço']},
+            {'nome': 'HPV', 'doses': ['1ª Dose', '2ª Dose']},
+            {'nome': 'Meningocócica ACWY', 'doses': ['Reforço']},
+            {'nome': 'Febre Amarela', 'doses': ['Dose Única']},
+            {'nome': 'Tríplice Viral (SCR)', 'doses': ['1ª Dose', '2ª Dose']},
+            {'nome': 'Hepatite B', 'doses': ['1ª Dose', '2ª Dose', '3ª Dose']},
+        ]
+    },
+    'adulto': {
+        'titulo': 'Adulto (20 a 59 anos)',
+        'vacinas': [
+            {'nome': 'Hepatite B', 'doses': ['1ª Dose', '2ª Dose', '3ª Dose']},
+            {'nome': 'Febre Amarela', 'doses': ['Dose Única']},
+            {'nome': 'Tríplice Viral (SCR)', 'doses': ['1ª Dose', '2ª Dose']},
+            {'nome': 'Dupla Adulto (dT)', 'doses': ['1ª Dose', '2ª Dose', '3ª Dose', 'Reforço']},
+            {'nome': 'DTPA (Gestante)', 'doses': ['1ª Dose', '2ª Dose', '3ª Dose', 'Reforço'], 'apenas_sexo': 'Feminino'},
+        ]
+    },
+    'idoso': {
+        'titulo': 'Idoso (60 anos ou mais)',
+        'vacinas': [
+            {'nome': 'Influenza (Gripe)', 'doses': ['Dose Anual']},
+            {'nome': 'Pneumocócica 23V', 'doses': ['Dose Única']},
+            {'nome': 'Dupla Adulto (dT)', 'doses': ['Reforço']},
+            {'nome': 'Covid-19', 'doses': ['Dose Anual']},
+            {'nome': 'Herpes Zóster', 'doses': ['1ª Dose', '2ª Dose']},
+        ]
+    },
+}
 
-def is_cpf_valido(cpf: str) -> bool:
-    """Valida um CPF brasileiro."""
-    
-    # 1. Remove caracteres não numéricos
-    cpf_numeros = re.sub(r'[^0-9]', '', cpf)
 
-    # 2. Verifica se tem 11 dígitos
-    if len(cpf_numeros) != 11:
-        return False
+def calcular_idade(data_nascimento_str):
+    """Retorna (anos, meses, dias) de idade a partir de uma data 'AAAA-MM-DD'."""
+    nascimento = date.fromisoformat(data_nascimento_str)
+    hoje = date.today()
 
-    # 3. Verifica se todos os dígitos são iguais (ex: 111.111.111-11)
-    if cpf_numeros == cpf_numeros[0] * 11:
-        return False
+    anos = hoje.year - nascimento.year
+    meses = hoje.month - nascimento.month
+    dias = hoje.day - nascimento.day
 
-    # 4. Cálculo do primeiro dígito verificador (dv1)
-    soma = 0
-    for i in range(9):
-        soma += int(cpf_numeros[i]) * (10 - i)
-    
-    dv1 = (soma * 10) % 11
-    if dv1 == 10:
-        dv1 = 0
-    
-    if dv1 != int(cpf_numeros[9]):
-        return False
+    if dias < 0:
+        meses -= 1
+        mes_anterior = hoje.month - 1 if hoje.month > 1 else 12
+        ano_mes_anterior = hoje.year if hoje.month > 1 else hoje.year - 1
+        ultimo_dia_mes_anterior = (date(ano_mes_anterior, mes_anterior % 12 + 1, 1) - timedelta(days=1)).day
+        dias += ultimo_dia_mes_anterior
 
-    # 5. Cálculo do segundo dígito verificador (dv2)
-    soma = 0
-    for i in range(10):
-        soma += int(cpf_numeros[i]) * (11 - i)
-    
-    dv2 = (soma * 10) % 11
-    if dv2 == 10:
-        dv2 = 0
+    if meses < 0:
+        anos -= 1
+        meses += 12
 
-    if dv2 != int(cpf_numeros[10]):
-        return False
-        
-    # Se passou por todas as verificações
-    return True
+    return anos, meses, dias
+
+
+def faixa_etaria(anos):
+    if anos <= 9:
+        return 'crianca'
+    elif anos <= 19:
+        return 'adolescente'
+    elif anos <= 59:
+        return 'adulto'
+    return 'idoso'
 
 
 # --- FUNÇÃO DE CONEXÃO COM O BANCO ---
@@ -394,6 +469,13 @@ def cadastro():
         cpf = re.sub(r'[^0-9]', '', cpf_bruto)
         senha = request.form['senha']
         confirmar_senha = request.form['confirmar_senha']
+        data_nascimento = request.form.get('data_nascimento')
+        sexo = request.form.get('sexo')
+        cep = re.sub(r'[^0-9]', '', request.form.get('cep', ''))
+        rua = request.form.get('rua')
+        bairro = request.form.get('bairro')
+        estado = request.form.get('estado')
+        numero = request.form.get('numero')
         # .strip() remove espaços em branco antes e depois
 
         lista_riscos = request.form.getlist('grupo_risco')
@@ -416,16 +498,42 @@ def cadastro():
         # Ex: ['Hipertenso', 'Diabético'] vira "Hipertenso,Diabético"
         grupo_risco_str = ",".join(lista_riscos)
         # 2. Validações
-        if not all([nome, cpf, senha, confirmar_senha]):
+        if not all([nome, cpf, senha, confirmar_senha, data_nascimento, sexo, cep, rua, bairro, estado, numero]):
             flash('Por favor, preencha todos os campos obrigatórios.', 'danger')
+            return redirect(url_for('cadastro'))
+
+        if sexo not in ('Masculino', 'Feminino', 'Transgênero'):
+            flash('Sexo inválido.', 'danger')
+            return redirect(url_for('cadastro'))
+
+        if len(cep) != 8:
+            flash('CEP inválido.', 'danger')
             return redirect(url_for('cadastro'))
 
         if senha != confirmar_senha:
             flash('As senhas não coincidem. Tente novamente.', 'danger')
             return redirect(url_for('cadastro'))
-            
-        if len(cpf) != 11 or not cpf.isdigit():
-            flash('CPF inválido. Deve conter 11 números.', 'danger')
+
+        if any(char.isdigit() for char in nome):
+            flash('O nome não pode conter números.', 'danger')
+            return redirect(url_for('cadastro'))
+
+        if not cpf_valido(cpf):
+            flash('CPF inválido.', 'danger')
+            return redirect(url_for('cadastro'))
+
+        try:
+            data_nascimento_valida = date.fromisoformat(data_nascimento)
+        except ValueError:
+            flash('Data de nascimento inválida.', 'danger')
+            return redirect(url_for('cadastro'))
+
+        if data_nascimento_valida > date.today():
+            flash('A data de nascimento não pode ser uma data futura.', 'danger')
+            return redirect(url_for('cadastro'))
+
+        if data_nascimento_valida < date.today() - timedelta(days=365 * 150):
+            flash('A data precisa ser mais recente.', 'danger')
             return redirect(url_for('cadastro'))
 
         conn = get_db_connection()
@@ -441,8 +549,10 @@ def cadastro():
         
         try:
             conn.execute(
-                "INSERT INTO usuarios (cpf, nome, senha_hash, grupo_risco) VALUES (?, ?, ?, ?)",
-                (cpf, nome, senha_hash, grupo_risco_str)
+                """INSERT INTO usuarios
+                   (cpf, nome, senha_hash, grupo_risco, data_nascimento, sexo, cep, rua, bairro, estado, numero)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (cpf, nome, senha_hash, grupo_risco_str, data_nascimento, sexo, cep, rua, bairro, estado, numero)
             )
             conn.commit()
             flash(f'Usuário {nome} cadastrado com sucesso! Faça o login.', 'success')
@@ -455,7 +565,9 @@ def cadastro():
         return redirect(url_for('login'))
 
     # Se o método for GET, apenas mostra a página de cadastro
-    return render_template('cadastro.html')
+    data_min_nascimento = (date.today() - timedelta(days=365 * 150)).isoformat()
+    data_max_nascimento = date.today().isoformat()
+    return render_template('cadastro.html', data_min_nascimento=data_min_nascimento, data_max_nascimento=data_max_nascimento)
 
 @app.route('/home')
 @login_required
@@ -560,6 +672,31 @@ def cronograma():
     conn.close()
     return render_template('cronograma.html', especialidades=especialidades)
 
+@app.route('/cartao_vacinal')
+@login_required
+def cartao_vacinal():
+    """Cartão vacinal do usuário logado, com a caderneta correspondente à sua faixa etária."""
+    cpf = session['cpf_logado']
+
+    conn = get_db_connection()
+    usuario = conn.execute('SELECT * FROM usuarios WHERE cpf = ?', (cpf,)).fetchone()
+    aplicadas_db = conn.execute(
+        'SELECT vacina, dose, data_aplicacao FROM vacinas_aplicadas WHERE cpf_usuario = ?', (cpf,)
+    ).fetchall()
+    conn.close()
+
+    idade_anos, idade_meses, idade_dias = calcular_idade(usuario['data_nascimento'])
+    calendario_base = CALENDARIO_VACINAL[faixa_etaria(idade_anos)]
+    vacinas_visiveis = [
+        v for v in calendario_base['vacinas']
+        if v.get('apenas_sexo') is None or v['apenas_sexo'] == usuario['sexo']
+    ]
+    calendario = {'titulo': calendario_base['titulo'], 'vacinas': vacinas_visiveis}
+    aplicadas = {f"{a['vacina']}|{a['dose']}": a['data_aplicacao'] for a in aplicadas_db}
+
+    return render_template('cartao_vacinal.html', usuario=usuario, calendario=calendario, aplicadas=aplicadas,
+                           idade_anos=idade_anos, idade_meses=idade_meses, idade_dias=idade_dias)
+
 @app.route('/lembretes', methods=['GET', 'POST'])
 @login_required
 def lembretes():
@@ -568,25 +705,49 @@ def lembretes():
     if request.method == 'POST':
         # Captura os dados do formulário vistoso
         nome_remedio = request.form.get('nome_remedio')
-        horario = request.form.get('horario')
+        data_inicio = request.form.get('data_inicio')
+        posologia = request.form.get('posologia')
+        prescrito_por = request.form.get('prescrito_por')
 
-        if nome_remedio and horario:
-            conn = get_db_connection()
-            conn.execute('INSERT INTO lembretes (cpf_usuario, nome_remedio, horario) VALUES (?, ?, ?)',
-                         (cpf, nome_remedio, horario))
-            conn.commit()
-            conn.close()
-            flash('Lembrete adicionado!', 'success')
+        if nome_remedio and data_inicio and posologia and prescrito_por:
+            data_limite = date.today() - timedelta(days=365 * 20)
+            try:
+                data_inicio_valida = date.fromisoformat(data_inicio)
+                data_no_passado = data_inicio_valida < data_limite
+                data_no_futuro = data_inicio_valida > date.today()
+            except ValueError:
+                data_no_passado = data_no_futuro = True
+
+            if data_no_passado:
+                flash('A data deve ser mais recente.', 'danger')
+            elif data_no_futuro:
+                flash('A data não pode ser uma data futura.', 'danger')
+            elif any(char.isdigit() for char in prescrito_por):
+                flash('O campo "Prescrito por" não pode conter números.', 'danger')
+            else:
+                nome_remedio = nome_remedio.strip()
+                nome_remedio = nome_remedio[:1].upper() + nome_remedio[1:]
+
+                conn = get_db_connection()
+                conn.execute(
+                    'INSERT INTO lembretes (cpf_usuario, nome_remedio, data_inicio, posologia, prescrito_por) VALUES (?, ?, ?, ?, ?)',
+                    (cpf, nome_remedio, data_inicio, posologia, prescrito_por))
+                conn.commit()
+                conn.close()
+                flash('Medicamento adicionado!', 'success')
         return redirect(url_for('lembretes'))
 
     # Listagem dos lembretes
     conn = get_db_connection()
     lembretes_db = conn.execute(
-        'SELECT * FROM lembretes WHERE cpf_usuario = ? ORDER BY horario', (cpf,)
+        'SELECT * FROM lembretes WHERE cpf_usuario = ? ORDER BY data_inicio DESC', (cpf,)
     ).fetchall()
     conn.close()
-    
-    return render_template('lembretes.html', lembretes=lembretes_db)
+
+    data_min_tratamento = (date.today() - timedelta(days=365 * 20)).isoformat()
+    data_max_tratamento = date.today().isoformat()
+    return render_template('lembretes.html', lembretes=lembretes_db,
+                            data_min_tratamento=data_min_tratamento, data_max_tratamento=data_max_tratamento)
 
 @app.route('/remover_lembrete/<int:id>', methods=['POST'])
 @login_required
@@ -606,10 +767,10 @@ def api_get_lembretes():
     
     conn = get_db_connection()
     lembretes_db = conn.execute(
-        'SELECT * FROM lembretes WHERE cpf_usuario = ? ORDER BY horario', (cpf,)
+        'SELECT * FROM lembretes WHERE cpf_usuario = ? ORDER BY data_inicio DESC', (cpf,)
     ).fetchall()
     conn.close()
-    
+
     # Converte os dados do banco para uma lista de dicionários
     lembretes_lista = [dict(row) for row in lembretes_db]
     return jsonify(lembretes_lista)
@@ -621,25 +782,29 @@ def api_add_lembrete():
     """Adiciona um novo lembrete no banco."""
     cpf = session['cpf_logado']
     dados = request.json # Pega os dados enviados pelo JavaScript
-    
+
     nome = dados['nome']
-    horario = dados['horario']
-    
+    data_inicio = dados['data_inicio']
+    posologia = dados['posologia']
+    prescrito_por = dados['prescrito_por']
+
     conn = get_db_connection()
     conn.execute(
-        'INSERT INTO lembretes (cpf_usuario, nome_remedio, horario) VALUES (?, ?, ?)',
-        (cpf, nome, horario)
+        'INSERT INTO lembretes (cpf_usuario, nome_remedio, data_inicio, posologia, prescrito_por) VALUES (?, ?, ?, ?, ?)',
+        (cpf, nome, data_inicio, posologia, prescrito_por)
     )
     conn.commit()
-    
+
     # Retorna o lembrete recém-criado com seu novo ID
     novo_lembrete_id = conn.execute('SELECT last_insert_rowid()').fetchone()[0]
     conn.close()
-    
+
     return jsonify({
         'id': novo_lembrete_id,
         'nome_remedio': nome,
-        'horario': horario
+        'data_inicio': data_inicio,
+        'posologia': posologia,
+        'prescrito_por': prescrito_por
     }), 201 # 201 = "Created"
 
 

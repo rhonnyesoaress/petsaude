@@ -11,15 +11,27 @@
         <h3>Adicionar Novo Medicamento</h3>
         <form action="{{ url_for('lembretes') }}" method="POST">
             <div class="mb-3">
-                <label class="form-label small fw-bold text-muted">Remédio</label>
-                <input type="text" name="nome_remedio" class="form-control input-custom" placeholder="Ex: Paracetamol 500mg" required>
+                <label class="form-label small fw-bold text-muted">Medicação</label>
+                <input type="text" name="nome_remedio" class="form-control input-custom" placeholder="Ex: Sertralina, Cloridrato - 50 mg - Comprimido" required>
             </div>
             <div class="row g-3">
-                <div class="col-7">
-                    <label class="form-label small fw-bold text-muted">Horário</label>
-                    <input type="time" name="horario" class="form-control input-custom" required>
+                <div class="col-6">
+                    <label class="form-label small fw-bold text-muted">Início do Tratamento</label>
+                    <input type="date" name="data_inicio" class="form-control input-custom" min="{{ data_min_tratamento }}" max="{{ data_max_tratamento }}"
+                        oninvalid="this.setCustomValidity(this.validity.rangeUnderflow ? 'A data deve ser mais recente.' : this.validity.rangeOverflow ? 'A data não pode ser uma data futura.' : '')"
+                        oninput="this.setCustomValidity('')" required>
                 </div>
-                <div class="col-5 d-flex align-items-end">
+                <div class="col-6">
+                    <label class="form-label small fw-bold text-muted">Posologia</label>
+                    <input type="text" name="posologia" class="form-control input-custom" placeholder="Ex: 1, a cada 12 hora(s) - uso contínuo" required>
+                </div>
+            </div>
+            <div class="row g-3 mt-1">
+                <div class="col-7">
+                    <label class="form-label small fw-bold text-muted">Prescrito por</label>
+                    <input type="text" name="prescrito_por" class="form-control input-custom" placeholder="Ex: Dr. Fulano de Tal" pattern="[^0-9]*" title="Não é permitido inserir números neste campo" oninput="this.value = this.value.replace(/[0-9]/g, '')" required>
+                </div>
+                <div class="col-5 d-flex align-items-end" style="margin-top: 15px;">
                     <button type="submit" class="btn btn-primary w-100 py-3 fw-bold shadow-sm" style="border-radius: 12px;">
                         Salvar
                     </button>
@@ -29,27 +41,40 @@
     </div>
 
     {% if lembretes %}
-    <div class="mt-5">
-        <div class="mb-4 d-flex justify-content-between align-items-center">
-            <h4 class="h6 fw-bold text-muted text-uppercase" style="letter-spacing: 1px;">Histórico</h4>
+    <div class="med-table-card mt-5">
+        <div class="med-table-header">
+            <span>💊 Medicamentos de Uso Contínuo</span>
         </div>
-
-        {% for lembrete in lembretes %}
-        <div class="reminder-card-item">
-            <div class="d-flex align-items-center gap-3">
-                <div class="reminder-details">
-                    <span class="med-name">{{ lembrete.nome_remedio }}</span>
-                    <span class="time-badge">{{ lembrete.horario }}</span>
-                </div>
-            </div>
-            
-            <form action="{{ url_for('remover_lembrete', id=lembrete.id) }}" method="POST">
-                <button type="submit" class="btn btn-sm btn-outline-danger border-0 rounded-circle" style="width: 35px; height: 35px;">
-                    ✕
-                </button>
-            </form>
+        <div class="table-responsive">
+            <table class="table-medicamentos">
+                <thead>
+                    <tr>
+                        <th>Início do<br>Tratamento</th>
+                        <th>Medicação</th>
+                        <th>Posologia</th>
+                        <th>Prescrito por</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lembrete in lembretes %}
+                    <tr>
+                        <td>{{ lembrete.data_inicio | data_br }}</td>
+                        <td><strong>{{ lembrete.nome_remedio }}</strong></td>
+                        <td>{{ lembrete.posologia }}</td>
+                        <td>{{ lembrete.prescrito_por }}</td>
+                        <td>
+                            <form action="{{ url_for('remover_lembrete', id=lembrete.id) }}" method="POST">
+                                <button type="submit" class="btn btn-sm btn-outline-danger border-0 rounded-circle" style="width: 30px; height: 30px;">
+                                    ✕
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        {% endfor %}
     </div>
     {% endif %}
 
